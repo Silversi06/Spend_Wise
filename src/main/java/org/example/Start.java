@@ -23,14 +23,14 @@ public class Start extends JFrame {
         try {
             BufferedImage image = ImageIO.read(new File(startimg));
             JLabel background = new JLabel(new ImageIcon(image));
-            background.setLayout(new FlowLayout(FlowLayout.CENTER, 200, 450)); // FlowLayout을 사용하여 가운데 정렬
+            background.setLayout(new FlowLayout(FlowLayout.RIGHT, -10, 550)); // FlowLayout을 사용하여 가운데 정렬
 
 
             BufferedImage buttonImg = ImageIO.read(new File(startbutton));
             ImageIcon buttonIcon = new ImageIcon(buttonImg);
             JButton imageButton = new JButton(buttonIcon);
 
-            Dimension buttonSize = new Dimension(450, 135);
+            Dimension buttonSize = new Dimension(300, 150);
             imageButton.setPreferredSize(buttonSize);
             // 다른 컴포넌트를 추가할 수 있습니다.
 
@@ -38,13 +38,6 @@ public class Start extends JFrame {
             imageButton.setOpaque(false);
             imageButton.setContentAreaFilled(false);
             imageButton.setBorderPainted(false);
-//            imageButton.setBounds(30, 170, 122, 30);
-            // 이미지 버튼의 위치 설정
-            int buttonX = 500;  // X 좌표
-            int buttonY = 500;  // Y 좌표
-            int buttonWidth = 450;  // 너비
-            int buttonHeight = 300;  // 높이
-            imageButton.setBounds(buttonX, buttonY, buttonWidth, buttonHeight);
 
             // 이미지 버튼을 배경 패널에 추가
             background.add(imageButton);
