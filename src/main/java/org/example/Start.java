@@ -10,6 +10,8 @@ import javax.imageio.ImageIO;
 import java.io.IOException;
 
 public class Start extends JFrame {
+    private Choose chooseScreen;
+
     public Start() {
         setTitle("Spend Wise");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -25,37 +27,43 @@ public class Start extends JFrame {
             JLabel background = new JLabel(new ImageIcon(image));
             background.setLayout(new FlowLayout(FlowLayout.RIGHT, -10, 550)); // FlowLayout을 사용하여 가운데 정렬
 
-
             BufferedImage buttonImg = ImageIO.read(new File(startbutton));
             ImageIcon buttonIcon = new ImageIcon(buttonImg);
             JButton imageButton = new JButton(buttonIcon);
 
             Dimension buttonSize = new Dimension(300, 150);
             imageButton.setPreferredSize(buttonSize);
-            // 다른 컴포넌트를 추가할 수 있습니다.
 
-
+            imageButton.setBorderPainted(false);
             imageButton.setOpaque(false);
             imageButton.setContentAreaFilled(false);
             imageButton.setBorderPainted(false);
 
-            // 이미지 버튼을 배경 패널에 추가
-            background.add(imageButton);
-//            background.setLayout(null);
-            background.setVisible(true);
+
+            chooseScreen = new Choose(); // Choose 클래스의 인스턴스 생성
 
             imageButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // 버튼이 클릭될 때 실행할 코드를 여기에 추가
-                    JOptionPane.showMessageDialog(Start.this, "버튼이 클릭되었습니다.");
+                    // 버튼이 클릭될 때 Choose 화면으로 전환
+                    setContentPane((JPanel) chooseScreen);
+                    revalidate();
                 }
             });
+
+            background.add(imageButton);
+            background.setVisible(true);
 
             setContentPane(background);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-}
 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            Start start = new Start();
+            start.setVisible(true);
+        });
+    }
+}
