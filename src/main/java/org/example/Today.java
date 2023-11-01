@@ -4,12 +4,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class Today extends JPanel {
 
     private Pay_plus payplusScreen;
     private Change changeScreen;
     private Delete deleteScreen;
+    private static final String DB_URL = "jdbc:mysql://localhost:3307/mysql";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "1234";
 
     public Today() {
         Color backgroundColor = Color.decode("#FFE6B7"); // 연한 주황색
@@ -113,6 +121,22 @@ public class Today extends JPanel {
         this.add(deleteScreen);
         this.setLayout(null);
         this.setVisible(true);
+    }
+
+    public static double getTodayExpenses() {
+        double totalExpenses = 0.0;
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String selectQuery = "SELECT amount FROM expenses WHERE DATE(date) = CURDATE()";
+            PreparedStatement preparedStatement = connection.prepareStatement(selectQuery);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                totalExpenses += resultSet.getDouble("amount");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return totalExpenses;
     }
 
     @Override
