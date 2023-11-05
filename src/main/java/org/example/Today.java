@@ -1,5 +1,7 @@
 package org.example;
 
+
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -9,6 +11,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 
 public class Today extends JPanel {
 
@@ -48,7 +51,7 @@ public class Today extends JPanel {
         imageButton3.setBorderPainted(false);
 
         setLayout(null);
-        imageButton1.setBounds(750, 15, 400, 300);
+        imageButton1.setBounds(750, 60, 400, 200);
         imageButton2.setBounds(750, 225, 400, 300);
         imageButton3.setBounds(750, 445, 400, 300);
 
@@ -61,21 +64,53 @@ public class Today extends JPanel {
         changeScreen = new Change();
         deleteScreen = new Delete();
 
+        JButton backButton = new JButton("Choose로 돌아가기");
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Choose 패널로 돌아가는 동작을 구현
+                JFrame chooseFrame = new JFrame("Choose");
+                Choose choosePanel = new Choose();
+                chooseFrame.add(choosePanel);
+                chooseFrame.setSize(1200, 800);
+                chooseFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // 창을 닫을 때 현재 창만 닫음
+                chooseFrame.setVisible(true);
+
+                // Login 패널을 부모 컴포넌트에서 제거
+                Window parentWindow = SwingUtilities.windowForComponent(Today.this);
+                parentWindow.dispose();
+            }
+        });
+
+        backButton.setBounds(880, 10, 150, 50);
+        this.add(backButton);
+
+
         // 이미지 버튼에 이벤트 리스너 추가 (클릭 시 동작을 정의할 수 있음)
         imageButton1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // "오늘" 버튼을 클릭했을 때 새로운 창으로 Today 패널을 표시
-                JFrame pay_plusFrame = new JFrame("Pay_plus");
-                Pay_plus pay_plusPanel = new Pay_plus();
-                pay_plusFrame.add(pay_plusPanel);
-                pay_plusFrame.setSize(1200, 800);
-                pay_plusFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // 창을 닫을 때 현재 창만 닫음
-                pay_plusFrame.setVisible(true);
+                // 백그라운드 스레드에서 데이터베이스 작업을 수행
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        // "오늘" 버튼을 클릭했을 때 새로운 창으로 Today 패널을 표시
+                        JFrame pay_plusFrame = new JFrame("Pay_plus");
+                        Pay_plus pay_plusPanel = new Pay_plus();
+                        pay_plusFrame.add(pay_plusPanel);
+                        pay_plusFrame.setSize(1200, 800);
+                        pay_plusFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // 창을 닫을 때 현재 창만 닫음
+                        pay_plusFrame.setVisible(true);
 
-                // Choose 패널을 부모 컴포넌트에서 제거하고 창을 닫습니다.
-                Window parentWindow = SwingUtilities.windowForComponent(Today.this);
-                parentWindow.dispose();
+                        // Choose 패널을 부모 컴포넌트에서 제거하고 창을 닫습니다.
+                        Window parentWindow = SwingUtilities.windowForComponent(Today.this);
+                        parentWindow.dispose();
+
+                        return null;
+                    }
+                };
+
+                worker.execute(); // 백그라운드 스레드 실행
             }
         });
 
@@ -139,10 +174,33 @@ public class Today extends JPanel {
         return totalExpenses;
     }
 
+
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // 추가적인 그리기 작업이 필요한 경우 여기에서 수행할 수 있습니다.
-    }
 
+        // 이미지 아래에 텍스트를 그릴 위치 설정
+        int x = 250;
+        int y = 200;
+
+        // 오늘 지출 합계를 가져와서 포맷
+        double todayExpenses = getTodayExpenses();
+        DecimalFormat df = new DecimalFormat("#");
+        String todayTotalText = df.format(todayExpenses) + " 원";
+
+        // 글씨 크기만 변경
+        Font originalFont = g.getFont();
+        Font newFont = new Font(originalFont.getName(), originalFont.getStyle(), 60); // 30은 원하는 크기로 변경 가능
+        g.setFont(newFont);
+
+
+        // 텍스트 색상 설정
+        g.setColor(Color.RED);
+
+        // 텍스트 그리기
+        g.drawString(todayTotalText, x, y);
+
+    }
 }
+
