@@ -46,10 +46,9 @@ public class Pay_plus extends JPanel {
                 String description = descriptionField.getText();
                 String amount = amountField.getText();
                 if (!description.isEmpty() && !amount.isEmpty()) {
-                    double amountValue = Double.parseDouble(amount); // 문자열을 double로 변환
-                    Expense newExpense = new Expense(description, amountValue);
+                    double amountValue = Double.parseDouble(amount);
+                    Expense newExpense = new Expense(description, amountValue);  // 수정된 생성자 사용
                     expenses.add(newExpense);
-//                    updateExpenseComboBox();
 
                     descriptionField.setText("");
                     amountField.setText("");
@@ -61,9 +60,6 @@ public class Pay_plus extends JPanel {
                 }
             }
         });
-
-
-
 
         JButton backButton = new JButton("Today로 돌아가기");
         backButton.addActionListener(new ActionListener() {
@@ -131,7 +127,15 @@ class Expense {
     public Expense(String description, double amount) {
         this.description = description;
         this.amount = amount;
+        this.date = new Date();  // 현재 날짜로 초기화
     }
+
+    public Expense(String description, double amount, Date date) {
+        this.description = description;
+        this.amount = amount;
+        this.date = date;
+    }
+
 
     public String getDescription() {
         return description;
@@ -294,7 +298,7 @@ class DatabaseConnector {
                         double amount = resultSet.getDouble("amount");
                         Date date = resultSet.getDate("date");
 
-                        Expense expense = new Expense(description, amount);
+                        Expense expense = new Expense(description, amount,date);
                         expense.setId(id);
                         expense.setDate(date);
                         weeklyExpenses.add(expense);
@@ -305,6 +309,29 @@ class DatabaseConnector {
             e.printStackTrace();
         }
         return weeklyExpenses;
+    }
+
+    public ArrayList<Expense> getMonthlyExpensesFromDB(int month) {
+        ArrayList<Expense> monthlyExpenses = new ArrayList<>();
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String selectQuery = "SELECT description, amount, date FROM expenses WHERE MONTH(date) = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(selectQuery)) {
+                preparedStatement.setInt(1, month);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        String description = resultSet.getString("description");
+                        double amount = resultSet.getDouble("amount");
+                        Date date = resultSet.getDate("date");
+
+                        Expense expense = new Expense(description, amount, date);
+                        monthlyExpenses.add(expense);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return monthlyExpenses;
     }
 }
 
