@@ -1,7 +1,5 @@
 package org.example;
 
-
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -12,6 +10,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PiePlot;
+import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.chart.plot.RingPlot;
+import org.jfree.ui.RectangleInsets;
 
 public class Today extends JPanel {
 
@@ -21,6 +26,7 @@ public class Today extends JPanel {
     private static final String DB_URL = "jdbc:mysql://localhost:3307/mysql";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "1234";
+
 
     public Today() {
         Color backgroundColor = Color.decode("#FFE6B7"); // 연한 주황색
@@ -123,8 +129,8 @@ public class Today extends JPanel {
                 // 주간 버튼을 클릭했을 때 수행할 동작 정의
                 // 예: JOptionPane.showMessageDialog(null, "이미지 버튼 클릭됨!");
                 JFrame changeFrame = new JFrame("Change");
-                Week weekPanel = new Week();
-                changeFrame.add(weekPanel);
+                Change changePanel = new Change();
+                changeFrame.add(changePanel);
                 changeFrame.setSize(1200, 800);
                 changeFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // 창을 닫을 때 현재 창만 닫음
                 changeFrame.setVisible(true);
@@ -153,6 +159,7 @@ public class Today extends JPanel {
                 parentWindow.dispose();
             }
         });
+
         this.add(deleteScreen);
         this.setLayout(null);
         this.setVisible(true);
@@ -201,6 +208,23 @@ public class Today extends JPanel {
         // 텍스트 그리기
         g.drawString(todayTotalText, x, y);
 
+
+        // 원 그래프 그리기
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("pay", todayExpenses);
+        dataset.setValue("money", 1000000 - todayExpenses); // 잔액은 임의로 설정
+
+        JFreeChart chart = ChartFactory.createRingChart(
+                "pay chart", dataset, false, true, false);
+        PiePlot plot = (PiePlot) chart.getPlot();
+// plot.setSectionDepth(0.35);
+        plot.setCircular(true);
+        plot.setLabelGenerator(null); // 레이블 제거
+
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(400, 400));
+        chartPanel.setBounds(200, 300, 400, 400);
+        add(chartPanel);
     }
 }
 
