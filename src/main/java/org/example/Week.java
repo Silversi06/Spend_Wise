@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.awt.print.PrinterException;
+
 
 public class Week extends JPanel {
     private Color backgroundColor = Color.decode("#FFE6B7"); // 연한 주황색
@@ -36,6 +38,7 @@ public class Week extends JPanel {
         add(createHeaderPanel(), BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(createBackButton(), BorderLayout.SOUTH);
+        add(createPrintButton(), BorderLayout.EAST);
     }
 
     private JPanel createHeaderPanel() {
@@ -49,6 +52,37 @@ public class Week extends JPanel {
 
         return headerPanel;
     }
+
+    private JButton createPrintButton() {
+        JButton printButton = new JButton("프린트");
+        printButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // 프린트 동작을 구현
+                try {
+                    JTextArea printArea = new JTextArea();
+                    printArea.append("주간 지출 현황\n\n");
+
+                    // 복사된 텍스트를 JTextArea에 추가
+                    printArea.append("주간 지출 내역:\n");
+                    printArea.append(getPrintableText());
+
+                    // 프린트 작업 수행
+                    printArea.print();
+                } catch (PrinterException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "프린트 오류: " + ex.getMessage());
+                }
+            }
+        });
+
+        // 버튼 크기 및 폰트 설정
+        printButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12)); // 작은 폰트
+        printButton.setPreferredSize(new Dimension(90, 20)); // 작은 크기
+
+        return printButton;
+    }
+
 
     private JButton createBackButton() {
         JButton backButton = new JButton("Choose로 돌아가기");
@@ -71,6 +105,7 @@ public class Week extends JPanel {
 
         return backButton;
     }
+
 
     private void displayDailyExpenses(ArrayList<Expense> weeklyExpenses, JTextArea expenseTextArea) {
         HashMap<String, Double> dailyExpenses = new HashMap<>();
@@ -101,6 +136,38 @@ public class Week extends JPanel {
         return simpleDateformat.format(date);
     }
 
+    private String getPrintableText() {
+        StringBuilder printableText = new StringBuilder();
+
+        // 주간 지출 데이터를 가져와서 문자열로 만듭니다.
+        DatabaseConnector dbConnector = new DatabaseConnector();
+        ArrayList<Expense> weeklyExpenses = dbConnector.getWeeklyExpensesFromDB();
+
+        HashMap<String, Double> dailyExpenses = new HashMap<>();
+        double totalWeeklyExpense = 0.0;
+
+        // 주간 지출 데이터를 요일별로 그룹화합니다.
+        for (Expense expense : weeklyExpenses) {
+            Date date = expense.getDate();
+            if (date != null) {
+                String dayOfWeek = getDayOfWeek(date);
+                double currentAmount = dailyExpenses.getOrDefault(dayOfWeek, 0.0);
+                dailyExpenses.put(dayOfWeek, currentAmount + expense.getAmount());
+                totalWeeklyExpense += expense.getAmount();
+            }
+        }
+
+        // 요일별 지출을 문자열에 추가합니다.
+        for (String dayOfWeek : dailyExpenses.keySet()) {
+            printableText.append(dayOfWeek + ": " + dailyExpenses.get(dayOfWeek) + " 원\n");
+        }
+
+        // 전체 주간 합계를 문자열에 추가합니다.
+        printableText.append("\n주간 합계: " + totalWeeklyExpense + " 원\n");
+
+        return printableText.toString();
+    }
+
     public static void main(String[] args) {
         JFrame frame = new JFrame("주간 지출 현황");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -108,4 +175,5 @@ public class Week extends JPanel {
         frame.pack();
         frame.setVisible(true);
     }
+
 }

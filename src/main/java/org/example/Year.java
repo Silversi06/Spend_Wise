@@ -4,11 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.print.PrinterException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 
 public class Year extends JPanel {
     private Color backgroundColor = Color.decode("#FFE6B7"); // 연한 주황색
@@ -40,6 +40,7 @@ public class Year extends JPanel {
 
         add(createHeaderPanel(), BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
+        add(createPrintButton(), BorderLayout.EAST);  // 추가된 부분
         add(createBackButton(), BorderLayout.SOUTH);
     }
 
@@ -77,6 +78,36 @@ public class Year extends JPanel {
         return backButton;
     }
 
+    private JButton createPrintButton() {
+        JButton printButton = new JButton("프린트");
+        printButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // 프린트 동작을 구현
+                try {
+                    JTextArea printArea = new JTextArea();
+                    printArea.append("월간 지출 현황\n\n");
+
+                    // 복사된 텍스트를 JTextArea에 추가
+                    printArea.append("이번 달 지출 내역:\n");
+                    printArea.append(getPrintableText());
+
+                    // 프린트 작업 수행
+                    printArea.print();
+                } catch (PrinterException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "프린트 오류: " + ex.getMessage());
+                }
+            }
+        });
+
+        // 버튼 크기 및 폰트 설정
+        printButton.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12)); // 작은 폰트
+        printButton.setPreferredSize(new Dimension(80, 20)); // 작은 크기
+
+        return printButton;
+    }
+
     private void displayMonthlyExpenses(ArrayList<Expense> monthlyExpenses, JTextArea expenseTextArea) {
         double totalMonthlyExpense = 0.0;
 
@@ -87,6 +118,29 @@ public class Year extends JPanel {
             totalMonthlyExpense += expense.getAmount();
         }
         expenseTextArea.append("\n이번 달 총 지출 합계: " + totalMonthlyExpense + " 원");
+    }
+
+    private String getPrintableText() {
+        StringBuilder printableText = new StringBuilder();
+
+        Calendar calendar = Calendar.getInstance();
+        int currentMonth = calendar.get(Calendar.MONTH) + 1; // 월은 0부터 시작하므로 +1 해줍니다.
+
+// 데이터베이스에서 현재 월의 지출 내역을 가져옵니다.
+        DatabaseConnector dbConnector = new DatabaseConnector();
+        ArrayList<Expense> monthlyExpenses = dbConnector.getMonthlyExpensesFromDB(currentMonth);
+
+        double totalMonthlyExpense = 0.0;
+
+        // 월간 지출 데이터를 JTextArea에 표시합니다.
+        printableText.append("이번 달 지출 내역:\n\n");
+        for (Expense expense : monthlyExpenses) {
+            printableText.append(expense.getDescription() + ": " + expense.getAmount() + " 원\n");
+            totalMonthlyExpense += expense.getAmount();
+        }
+        printableText.append("\n이번 달 총 지출 합계: " + totalMonthlyExpense + " 원");
+
+        return printableText.toString();
     }
 
     public static void main(String[] args) {
