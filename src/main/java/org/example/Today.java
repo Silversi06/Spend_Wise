@@ -13,6 +13,8 @@ import java.text.DecimalFormat;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.PieSectionLabelGenerator;
+import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.chart.plot.RingPlot;
@@ -181,6 +183,27 @@ public class Today extends JPanel {
         return totalExpenses;
     }
 
+    public static double getLoggedInUserExpenses(String username) {
+        double totalExpenses = 0.0;
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            // 사용자 아이디(username)를 기반으로 해당 사용자의 지출 내역을 조회
+            String selectQuery = "SELECT amount FROM expenses WHERE username = ? AND DATE(date) = CURDATE()";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(selectQuery)) {
+                preparedStatement.setString(1, username);  // 사용자 아이디 설정
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        totalExpenses += resultSet.getDouble("amount");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("SQL 오류: " + e.getMessage());
+        }
+        return totalExpenses;
+    }
+
+
 
 
     @Override
@@ -201,13 +224,11 @@ public class Today extends JPanel {
         Font newFont = new Font(originalFont.getName(), originalFont.getStyle(), 60); // 30은 원하는 크기로 변경 가능
         g.setFont(newFont);
 
-
         // 텍스트 색상 설정
         g.setColor(Color.RED);
 
         // 텍스트 그리기
         g.drawString(todayTotalText, x, y);
-
 
         // 원 그래프 그리기
         DefaultPieDataset dataset = new DefaultPieDataset();
@@ -216,15 +237,34 @@ public class Today extends JPanel {
 
         JFreeChart chart = ChartFactory.createRingChart(
                 "pay chart", dataset, false, true, false);
-        PiePlot plot = (PiePlot) chart.getPlot();
-// plot.setSectionDepth(0.35);
+        RingPlot plot = (RingPlot) chart.getPlot();
         plot.setCircular(true);
         plot.setLabelGenerator(null); // 레이블 제거
+
+        // 각 섹션에 대한 색상 설정
+        plot.setSectionPaint("pay", new Color(255, 0, 0)); // "pay" 섹션을 빨간색으로 설정
+        plot.setSectionPaint("money", new Color(255, 255, 0)); // "money" 섹션을 파란색으로 설정
+
+
+        // 오늘 남은 돈을 가져와서 포맷
+        double remainingMoney = 1000000 - getTodayExpenses(); // Assuming initial amount is 1,000,000
+        String remainingMoneyText = df.format(remainingMoney) + " 원";
+
+        // 글씨 크기만 변경
+        Font remainingFont = new Font(originalFont.getName(), originalFont.getStyle(), 30);
+        g.setFont(remainingFont);
+
+        // 텍스트 색상 설정
+        g.setColor(Color.BLUE);
+
+        // 텍스트 그리기
+        g.drawString("남은 돈: " + remainingMoneyText, x+10, y + 90); // Adjust y position accordingly
 
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(400, 400));
         chartPanel.setBounds(200, 300, 400, 400);
         add(chartPanel);
     }
+
 }
 
